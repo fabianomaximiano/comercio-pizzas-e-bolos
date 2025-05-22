@@ -1,0 +1,48 @@
+.comercio-pizzas-e-bolos-meta-box-section {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+.comercio-pizzas-e-bolos-meta-box-section:last-of-type {
+    border-bottom: none;
+}
+.comercio-pizzas-e-bolos-pizza-size-item,
+.comercio-pizzas-e-bolos-pizza-crust-item,
+.comercio-pizzas-e-bolos-pizza-flavor-item,
+.comercio-pizzas-e-bolos-pizza-extra-item,
+.comercio-pizzas-e-bolos-pizza-removable-item {
+    border: 1px solid #e0e0e0;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+}
+.comercio-pizzas-e-bolos-pizza-size-item label,
+.comercio-pizzas-e-bolos-pizza-crust-item label,
+.comercio-pizzas-e-bolos-pizza-flavor-item label,
+.comercio-pizzas-e-bolos-pizza-extra-item label,
+.comercio-pizzas-e-bolos-pizza-removable-item label {
+    display: block;
+    flex: 1 1 200px; /* Garante que os campos tenham um tamanho mínimo e quebrem a linha */
+    margin-bottom: 5px;
+}
+.comercio-pizzas-e-bolos-pizza-size-item label input,
+.comercio-pizzas-e-bolos-pizza-crust-item label input,
+.comercio-pizzas-e-bolos-pizza-flavor-item label input,
+.comercio-pizzas-e-bolos-pizza-extra-item label input,
+.comercio-pizzas-e-bolos-pizza-removable-item label input {
+    width: 100%;
+    box-sizing: border-box;
+}
+.comercio-pizzas-e-bolos-remove-item {
+    flex-shrink: 0;
+    margin-left: auto;
+    align-self: center;
+}
+.comercio-pizzas-e-bolos-meta-box-section h3 {
+    margin-top: 0;
+}

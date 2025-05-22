@@ -1,0 +1,152 @@
+/* No seu arquivo: assets/css/frontend.css */
+
+#comercio-pizzas-e-bolos-builder-wrapper {
+    border: 1px solid #eee;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #fff;
+    border-radius: 5px;
+}
+
+.comercio-pizzas-e-bolos-section {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.comercio-pizzas-e-bolos-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.comercio-pizzas-e-bolos-section h3 {
+    font-size: 1.2em;
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.comercio-pizzas-e-bolos-options-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.95em;
+    color: #555;
+}
+
+.comercio-pizzas-e-bolos-options-group input[type="radio"],
+.comercio-pizzas-e-bolos-options-group input[type="checkbox"] {
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.comercio-pizzas-e-bolos-flavor-selection {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.comercio-pizzas-e-bolos-flavor-selection .flavor-half {
+    flex: 1;
+    min-width: 250px;
+}
+
+.comercio-pizzas-e-bolos-flavor-selection select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+textarea[name="comercio_pizzas_e_bolos_pizza_notes"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    resize: vertical;
+}
+
+/* --- ESTILOS PARA O VERIFICADOR DE CEP --- */
+.comercio-pizzas-e-bolos-cep-checker {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+#comercio_pizzas_e_bolos_cep_input {
+    flex: 1;
+    min-width: 150px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1em;
+}
+
+#comercio_pizzas_e_bolos_check_cep_button {
+    padding: 10px 15px;
+    background-color: #0073aa;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+}
+
+#comercio_pizzas_e_bolos_check_cep_button:hover:not(:disabled) {
+    background-color: #005177;
+}
+
+#comercio_pizzas_e_bolos_check_cep_button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+#comercio_pizzas_e_bolos_cep_result {
+    width: 100%;
+    font-size: 0.9em;
+    padding: 5px 0;
+}
+
+.success-message {
+    color: green;
+    font-weight: bold;
+}
+
+.error-message {
+    color: red;
+    font-weight: bold;
+}
+
+.loading-message {
+    color: gray;
+}
+
+/* Estilo para campos de validação com erro */
+.validation-error {
+    border: 1px solid red !important;
+}
+
+/* Garante que o botão de adicionar ao carrinho não seja menor que o padrão */
+.single_add_to_cart_button {
+    min-width: 150px;
+    padding: 10px 20px;
+    font-size: 1.1em;
+}
+
+/* Ajustes de responsividade básicos */
+@media (max-width: 768px) {
+    .comercio-pizzas-e-bolos-cep-checker {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    #comercio_pizzas_e_bolos_cep_input,
+    #comercio_pizzas_e_bolos_check_cep_button {
+        width: 100%;
+        min-width: unset;
+    }
+}

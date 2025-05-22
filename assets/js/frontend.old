@@ -1,0 +1,275 @@
+jQuery(document).ready(function($) {
+    var $pizzaBuilderWrapper = $('#comercio-pizzas-e-bolos-builder-wrapper');
+    var $addToCartButton = $('button.single_add_to_cart_button'); // O botão "Adicionar ao Carrinho" do WooCommerce
+
+    // Variáveis para o verificador de CEP
+    var $cepInput = $('#comercio_pizzas_e_bolos_cep_input');
+    var $checkCepButton = $('#comercio_pizzas_e_bolos_check_cep_button');
+    var $cepResultDiv = $('#comercio_pizzas_e_bolos_cep_result'); // Corrigido o ID aqui
+    var isCepValid = false; // Flag para controlar o estado da validação do CEP
+
+    // --- Função para formatar o CEP ---
+    $cepInput.on('keyup', function() {
+        var value = $(this).val().replace(/\D/g, ''); // Remove tudo que não é dígito
+        if (value.length > 5) {
+            value = value.substring(0, 5) + '-' + value.substring(5, 8);
+        }
+        $(this).val(value);
+    });
+    // --- FIM NOVO: Função para formatar o CEP ---
+
+    // Função para atualizar o estado do botão "Adicionar ao Carrinho"
+    function updateAddToCartButtonState() {
+        if (isCepValid) {
+            $addToCartButton.prop('disabled', false); // Habilita o botão
+        } else {
+            $addToCartButton.prop('disabled', true); // Desabilita o botão
+        }
+    }
+
+    // Inicializa o botão desabilitado se o construtor estiver presente
+    if ($pizzaBuilderWrapper.length > 0) {
+        updateAddToCartButtonState();
+    }
+
+
+    // Intercepta o clique no botão de verificar CEP
+    $checkCepButton.on('click', function() {
+        var cep = $cepInput.val().replace(/\D/g, ''); // Limpa o CEP para envio
+        $cepResultDiv.html(''); // Limpa mensagens anteriores
+
+        if (cep.length !== 8) {
+            $cepResultDiv.html('<span class="error-message" style="color: red;">' + comercio_pizzas_e_bolos_vars.invalid_cep_message + '</span>');
+            isCepValid = false;
+            updateAddToCartButtonState();
+            return;
+        }
+
+        $cepResultDiv.html('<span class="loading-message" style="color: gray;">' + comercio_pizzas_e_bolos_vars.checking_cep_message + '</span>');
+        $checkCepButton.prop('disabled', true); // Desabilita o botão enquanto verifica
+
+        // Chamada AJAX para o backend
+        $.ajax({
+            url: comercio_pizzas_e_bolos_vars.ajax_url, // URL do admin-ajax.php
+            type: 'POST',
+            data: {
+                action: 'comercio_pizzas_e_bolos_check_cep_delivery', // Ação PHP a ser chamada
+                cep: cep,
+                product_id: comercio_pizzas_e_bolos_vars.product_id // Passa o ID do produto
+            },
+            success: function(response) {
+                if (response.success) {
+                    if (response.data.available) {
+                        isCepValid = true;
+                        var message = comercio_pizzas_e_bolos_vars.delivery_available_message
+                            .replace('{cost}', response.data.cost_html)
+                            .replace('{method}', response.data.method_title);
+                        $cepResultDiv.html('<span class="success-message" style="color: green;">' + message + '</span>');
+                    } else {
+                        isCepValid = false;
+                        $cepResultDiv.html('<span class="error-message" style="color: red;">' + comercio_pizzas_e_bolos_vars.delivery_unavailable_message + '</span>');
+                    }
+                } else {
+                    isCepValid = false;
+                    $cepResultDiv.html('<span class="error-message" style="color: red;">' + comercio_pizzas_e_bolos_vars.error_checking_cep_message + '</span>');
+                    console.error('Erro na resposta AJAX:', response.data.message);
+                }
+                updateAddToCartButtonState(); // Atualiza o estado do botão
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                isCepValid = false;
+                $cepResultDiv.html('<span class="error-message" style="color: red;">' + comercio_pizzas_e_bolos_vars.error_checking_cep_message + '</span>');
+                console.error('Erro AJAX:', textStatus, errorThrown);
+                updateAddToCartButtonState(); // Atualiza o estado do botão
+            },
+            complete: function() {
+                $checkCepButton.prop('disabled', false); // Habilita o botão de volta
+            }
+        });
+    });
+
+
+    // --- CÓDIGO EXISTENTE DO CONSTRUTOR DE PIZZA ---
+    if ($pizzaBuilderWrapper.length > 0) {
+        // Atualiza o preço do produto com base nas seleções do construtor
+        function updatePizzaPrice() {
+            var basePriceText = $('.product-info .price .woocommerce-Price-amount').text();
+            var basePrice = parseFloat(basePriceText.replace(/[^0-9,.]/g, '').replace(',', '.')); // Pega o preço base do produto
+            
+            // Tenta pegar o preço de uma variação se houver, ou fallback para o primeiro preço encontrado
+            if (isNaN(basePrice) || basePrice === 0) { // Se o preço base não foi encontrado ou é zero (pode ser um produto variável)
+                var variationPriceEl = $('form.cart').find('input[name="variation_price"]');
+                if (variationPriceEl.length) {
+                    basePrice = parseFloat(variationPriceEl.val());
+                } else {
+                    // Fallback para o primeiro preço visível, se o tema mostrar um preço base ou variável.
+                    var firstPriceEl = $('form.cart').find('.woocommerce-Price-amount:first');
+                    if(firstPriceEl.length) {
+                        basePrice = parseFloat(firstPriceEl.text().replace(/[^0-9,.]/g, '').replace(',', '.'));
+                    }
+                }
+            }
+
+            if (isNaN(basePrice)) basePrice = 0; // fallback final se nada for encontrado
+
+            var currentPrice = basePrice;
+            var selectedFlavors = []; // Para armazenar os preços dos sabores
+
+            // Adiciona preço do Tamanho
+            var selectedSizePrice = $('input[name="comercio_pizzas_e_bolos_pizza_size"]:checked').data('price');
+            if (selectedSizePrice !== undefined) {
+                currentPrice += parseFloat(selectedSizePrice);
+            }
+
+            // Adiciona preço da Borda
+            var selectedCrustPrice = $('input[name="comercio_pizzas_e_bolos_pizza_crust"]:checked').data('price');
+            if (selectedCrustPrice !== undefined) {
+                currentPrice += parseFloat(selectedCrustPrice);
+            }
+
+            // Preço dos Sabores (meia-a-meia)
+            $('.comercio-pizzas-e-bolos-pizza-flavor-select option:selected').each(function() {
+                var flavorPrice = $(this).data('price');
+                if (flavorPrice !== undefined) {
+                    selectedFlavors.push(parseFloat(flavorPrice));
+                }
+            });
+
+            if (selectedFlavors.length > 0) {
+                var maxFlavorPrice = 0;
+                for (var i = 0; i < selectedFlavors.length; i++) {
+                    if (selectedFlavors[i] > maxFlavorPrice) {
+                        maxFlavorPrice = selectedFlavors[i];
+                    }
+                }
+                currentPrice += maxFlavorPrice;
+            }
+
+            // Adiciona preço dos Extras
+            $('input[name="comercio_pizzas_e_bolos_pizza_extras[]"]:checked').each(function() {
+                var extraPrice = $(this).data('price');
+                if (extraPrice !== undefined) {
+                    currentPrice += parseFloat(extraPrice);
+                }
+            });
+
+            // Atualiza o preço exibido no frontend
+            var formattedPrice = currentPrice.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+            $('.woocommerce-Price-amount.amount').text(formattedPrice); // Pode precisar ajustar o seletor .amount dependendo do seu tema
+        }
+
+        // Chama a função de atualização de preço ao carregar a página e ao mudar as seleções
+        updatePizzaPrice();
+        $pizzaBuilderWrapper.on('change', 'input[type="radio"], input[type="checkbox"], select', updatePizzaPrice);
+
+
+        // Intercepta o envio do formulário de adição ao carrinho
+        $('form.cart').on('submit', function(e) {
+            // Verifica se o CEP foi validado antes de permitir adicionar ao carrinho
+            if (!isCepValid) {
+                e.preventDefault(); // Impede o envio
+                $cepResultDiv.html('<span class="error-message" style="color: red;">' + comercio_pizzas_e_bolos_vars.cep_required_message + '</span>');
+                // Opcional: Rolagem para o campo de CEP
+                $('html, body').animate({
+                    scrollTop: $cepInput.offset().top - 100
+                }, 500);
+                return false;
+            }
+
+            var formData = {};
+
+            // Validação no frontend (campos "required" já devem funcionar com HTML5)
+            var isValid = true;
+            $pizzaBuilderWrapper.find('input[required], select[required]').each(function() {
+                if (!$(this).val()) {
+                    isValid = false;
+                    $(this).addClass('validation-error');
+                    alert('Por favor, preencha todas as opções obrigatórias para a pizza.');
+                    return false;
+                } else {
+                    $(this).removeClass('validation-error');
+                }
+            });
+
+            if (!isValid) {
+                e.preventDefault();
+                return false;
+            }
+
+            // Coleta os dados do construtor de pizza
+            formData.pizza_builder_data = {};
+
+            // Tamanho
+            var selectedSize = $('input[name="comercio_pizzas_e_bolos_pizza_size"]:checked');
+            if (selectedSize.length) {
+                formData.pizza_builder_data.size = {
+                    name: selectedSize.val(),
+                    price: selectedSize.data('price')
+                };
+            }
+
+            // Borda
+            var selectedCrust = $('input[name="comercio_pizzas_e_bolos_pizza_crust"]:checked');
+            if (selectedCrust.length) {
+                formData.pizza_builder_data.crust = {
+                    name: selectedCrust.val(),
+                    price: selectedCrust.data('price')
+                };
+            }
+
+            // Sabores
+            var flavor1 = $('select[name="comercio_pizzas_e_bolos_pizza_flavor_1"] option:selected');
+            var flavor2 = $('select[name="comercio_pizzas_e_bolos_pizza_flavor_2"] option:selected');
+
+            if (flavor1.length && flavor1.val()) {
+                formData.pizza_builder_data.flavors = [{
+                    name: flavor1.val(),
+                    price: flavor1.data('price')
+                }];
+
+                if (flavor2.length && flavor2.val()) {
+                    formData.pizza_builder_data.flavors.push({
+                        name: flavor2.val(),
+                        price: flavor2.data('price')
+                    });
+                }
+            }
+
+
+            // Extras
+            formData.pizza_builder_data.extras = [];
+            $('input[name="comercio_pizzas_e_bolos_pizza_extras[]"]:checked').each(function() {
+                formData.pizza_builder_data.extras.push({
+                    name: $(this).val(),
+                    price: $(this).data('price')
+                });
+            });
+
+            // Removíveis
+            formData.pizza_builder_data.removables = [];
+            $('input[name="comercio_pizzas_e_bolos_pizza_removables[]"]:checked').each(function() {
+                formData.pizza_builder_data.removables.push({
+                    name: $(this).val()
+                });
+            });
+
+            // Observações
+            var notes = $('textarea[name="comercio_pizzas_e_bolos_pizza_notes"]').val();
+            if (notes) {
+                formData.pizza_builder_data.notes = notes;
+            }
+
+
+            // Adiciona os dados personalizados como um campo oculto ao formulário
+            var customDataInput = $('<input>')
+                .attr('type', 'hidden')
+                .attr('name', 'comercio_pizzas_e_bolos_custom_data')
+                .val(JSON.stringify(formData.pizza_builder_data));
+
+            $(this).append(customDataInput);
+        });
+    }
+});
